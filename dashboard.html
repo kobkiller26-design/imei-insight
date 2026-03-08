@@ -1,5 +1,3 @@
-<select id="service"></select>
-
 <!DOCTYPE html>
 <html>
 
@@ -33,7 +31,7 @@ border-radius:10px;
 box-shadow:0 10px 25px rgba(0,0,0,0.1);
 }
 
-input{
+select,input{
 width:100%;
 padding:12px;
 margin-top:10px;
@@ -92,6 +90,8 @@ IMEI Insight Dashboard
 
 <h2>IMEI Check</h2>
 
+<select id="service"></select>
+
 <input id="imei" placeholder="Enter IMEI number">
 
 <button onclick="checkIMEI()">Check IMEI</button>
@@ -117,10 +117,11 @@ IMEI Insight Dashboard
 async function checkIMEI(){
 
 const imei=document.getElementById("imei").value
+const service=document.getElementById("service").value
 
 const token=localStorage.getItem("token")
 
-const res=await fetch("/api/check?imei="+imei,{
+const res=await fetch("/api/check?imei="+imei+"&service="+service,{
 headers:{authorization:token}
 })
 
@@ -187,6 +188,41 @@ window.location=data.url
 
 }
 
+async function loadServices(){
+
+const res=await fetch("/api/services-sync")
+
+const data=await res.json()
+
+const select=document.getElementById("service")
+
+select.innerHTML=""
+
+try{
+
+const services=JSON.parse(data.services)
+
+services.forEach(s=>{
+
+let option=document.createElement("option")
+
+option.value=s.serviceid
+
+option.text=s.servicename+" - $"+s.price
+
+select.appendChild(option)
+
+})
+
+}catch{
+
+select.innerHTML="<option>Services failed to load</option>"
+
+}
+
+}
+
+loadServices()
 loadHistory()
 loadCredits()
 
