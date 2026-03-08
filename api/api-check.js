@@ -21,7 +21,7 @@ body:JSON.stringify({
 
 username:"WilnoEsteril565",
 apiaccesskey:"zPxFG-eANVU-OpN1q-NpwpJ-XptdG-m2DYL",
-request:"IMEI_CHECK",
+request:"CHECK_IMEI",
 imei:imei,
 serviceid:service
 
