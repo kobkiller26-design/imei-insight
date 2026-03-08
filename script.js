@@ -1,14 +1,14 @@
-async function checkIMEI() {
+async function checkIMEI(){
 
-const imei = document.getElementById("imei").value
+const imei = document.getElementById("imei").value.trim()
 const resultBox = document.getElementById("result")
 
-if(!imei){
-alert("Enter IMEI")
+if(imei.length !== 15 || isNaN(imei)){
+resultBox.innerHTML = "IMEI must be 15 digits"
 return
 }
 
-resultBox.innerHTML = "Checking IMEI..."
+resultBox.innerHTML = "Checking device..."
 
 try{
 
@@ -22,7 +22,7 @@ resultBox.innerHTML = `
 
 }catch(error){
 
-resultBox.innerHTML = "Error checking IMEI"
+resultBox.innerHTML = "Unable to check IMEI"
 
 }
 
