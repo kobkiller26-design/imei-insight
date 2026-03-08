@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>IMEI Insight Dashboard</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f5f7fb;
+margin:0;
+padding:0;
+}
+
+header{
+background:#111827;
+color:white;
+padding:20px;
+font-size:20px;
+}
+
+.container{
+max-width:900px;
+margin:auto;
+margin-top:40px;
+background:white;
+padding:30px;
+border-radius:10px;
+box-shadow:0 10px 25px rgba(0,0,0,0.1);
+}
+
+input{
+width:100%;
+padding:12px;
+margin-top:10px;
+border-radius:6px;
+border:1px solid #ccc;
+}
+
+button{
+margin-top:10px;
+padding:12px;
+border:none;
+background:#2563eb;
+color:white;
+border-radius:6px;
+cursor:pointer;
+}
+
+button:hover{
+background:#1e4ed8;
+}
+
+.result{
+margin-top:20px;
+padding:15px;
+background:#f1f5f9;
+border-radius:6px;
+}
+
+.history{
+margin-top:30px;
+}
+
+.history-item{
+padding:10px;
+border-bottom:1px solid #eee;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+IMEI Insight Dashboard
+
+</header>
+
+<div class="container">
+
+<h2>Check IMEI</h2>
+
+<input id="imei" placeholder="Enter IMEI number">
+
+<button onclick="checkIMEI()">Check IMEI</button>
+
+<div id="result" class="result"></div>
+
+<div class="history">
+
+<h3>Check History</h3>
+
+<div id="history"></div>
+
+</div>
+
+</div>
+
+<script>
+
+async function checkIMEI(){
+
+const imei=document.getElementById("imei").value
+
+const token=localStorage.getItem("token")
+
+const res=await fetch("/api/check?imei="+imei,{
+headers:{authorization:token}
+})
+
+const data=await res.json()
+
+document.getElementById("result").innerText=data.result
+
+loadHistory()
+
+}
+
+async function loadHistory(){
+
+const token=localStorage.getItem("token")
+
+const res=await fetch("/api/history",{
+headers:{authorization:token}
+})
+
+const data=await res.json()
+
+let html=""
+
+data.forEach(item=>{
+html+=`
+<div class="history-item">
+IMEI: ${item.imei}
+</div>
+`
+})
+
+document.getElementById("history").innerHTML=html
+
+}
+
+loadHistory()
+
+</script>
+
+</body>
+
+</html>
