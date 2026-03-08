@@ -1,102 +1,47 @@
-<!DOCTYPE html>
-<html>
-<head>
+document.addEventListener("DOMContentLoaded", () => {
 
-<title>Free IMEI Check | Phone Blacklist & Carrier Status</title>
+const checkBtn = document.querySelector("#checkBtn")
+const imeiInput = document.querySelector("#imei")
+const serviceSelect = document.querySelector("#service")
+const resultBox = document.querySelector("#result")
 
-<meta name="description" content="Check any phone IMEI instantly. Verify blacklist status, carrier lock, model information and more.">
+if (!checkBtn) return
 
-<meta name="keywords" content="IMEI check, phone blacklist check, iPhone IMEI check, Samsung IMEI check">
+checkBtn.addEventListener("click", async () => {
 
-<style>
+const imei = imeiInput.value.trim()
+const service = serviceSelect.value
 
-body{
-font-family:Arial;
-background:#f4f6fb;
-margin:0;
+if (!imei) {
+resultBox.textContent = "Enter IMEI"
+return
 }
 
-header{
-background:#111827;
-color:white;
-padding:20px;
-font-size:22px;
-}
+resultBox.textContent = "Checking..."
 
-.container{
-max-width:800px;
-margin:auto;
-margin-top:40px;
-background:white;
-padding:30px;
-border-radius:10px;
-box-shadow:0 10px 20px rgba(0,0,0,0.1);
-}
+try {
 
-input{
-width:100%;
-padding:12px;
-margin-top:10px;
-border-radius:6px;
-border:1px solid #ccc;
-}
+const response = await fetch("/api/api-check", {
+method: "POST",
+headers: {
+"Content-Type": "application/json"
+},
+body: JSON.stringify({
+imei: imei,
+service: service
+})
+})
 
-button{
-padding:12px;
-margin-top:10px;
-background:#2563eb;
-color:white;
-border:none;
-border-radius:6px;
-cursor:pointer;
-}
+const data = await response.json()
 
-.result{
-margin-top:20px;
-padding:15px;
-background:#f1f5f9;
-border-radius:6px;
-}
+resultBox.textContent = JSON.stringify(data, null, 2)
 
-</style>
+} catch (error) {
 
-</head>
-
-<body>
-
-<header>
-Free IMEI Check Tool
-</header>
-
-<div class="container">
-
-<h2>Check Your Phone IMEI</h2>
-
-<p>Enter your IMEI number to verify blacklist status, model details and network information.</p>
-
-<input id="imei" placeholder="Enter IMEI">
-
-<button onclick="checkIMEI()">Check IMEI</button>
-
-<div id="result" class="result"></div>
-
-</div>
-
-<script>
-
-async function checkIMEI(){
-
-const imei=document.getElementById("imei").value
-
-const res=await fetch("/api/check?imei="+imei)
-
-const data=await res.json()
-
-document.getElementById("result").innerText=data.result
+resultBox.textContent = "Request failed"
 
 }
 
-</script>
+})
 
-</body>
-</html>
+})
