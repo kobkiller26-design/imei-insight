@@ -20,7 +20,7 @@ return res.json({error:"No credits"})
 
 try{
 
-const dhru = await fetch("https://YOUR-DHRU-URL/api",{
+const dhru = await fetch("https://dhru.checkimei.com/api",{
 method:"POST",
 headers:{
 "Content-Type":"application/json"
