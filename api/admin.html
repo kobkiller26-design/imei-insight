@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>IMEI Insight Admin</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f3f4f6;
+margin:0;
+}
+
+header{
+background:black;
+color:white;
+padding:20px;
+font-size:22px;
+}
+
+.container{
+max-width:1000px;
+margin:auto;
+margin-top:40px;
+background:white;
+padding:30px;
+border-radius:10px;
+}
+
+button{
+padding:10px;
+margin:5px;
+}
+
+.item{
+border-bottom:1px solid #eee;
+padding:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+IMEI Insight Admin Panel
+
+</header>
+
+<div class="container">
+
+<h2>Users</h2>
+
+<button onclick="loadUsers()">Load Users</button>
+
+<div id="users"></div>
+
+<h2>IMEI Checks</h2>
+
+<button onclick="loadChecks()">Load Checks</button>
+
+<div id="checks"></div>
+
+<h2>Payments</h2>
+
+<button onclick="loadPayments()">Load Payments</button>
+
+<div id="payments"></div>
+
+</div>
+
+<script>
+
+const adminKey="ADMIN_SECRET"
+
+async function loadUsers(){
+
+const res=await fetch("/api/admin-panel?action=users",{
+headers:{"x-admin":adminKey}
+})
+
+const data=await res.json()
+
+let html=""
+
+data.forEach(u=>{
+html+=`
+<div class="item">
+${u.email} | Credits: ${u.credits}
+
+<button onclick="addCredits('${u.email}')">Add Credits</button>
+
+<button onclick="disableUser('${u.email}')">Disable</button>
+
+</div>
+`
+})
+
+document.getElementById("users").innerHTML=html
+
+}
+
+async function loadChecks(){
+
+const res=await fetch("/api/admin-panel?action=checks",{
+headers:{"x-admin":adminKey}
+})
+
+const data=await res.json()
+
+let html=""
+
+data.forEach(c=>{
+html+=`
+<div class="item">
+${c.user} checked ${c.imei}
+</div>
+`
+})
+
+document.getElementById("checks").innerHTML=html
+
+}
+
+async function loadPayments(){
+
+const res=await fetch("/api/admin-panel?action=payments",{
+headers:{"x-admin":adminKey}
+})
+
+const data=await res.json()
+
+let html=""
+
+data.forEach(p=>{
+html+=`
+<div class="item">
+${p.email} paid ${p.amount}
+</div>
+`
+})
+
+document.getElementById("payments").innerHTML=html
+
+}
+
+async function addCredits(email){
+
+const amount=prompt("Credits to add")
+
+await fetch(`/api/admin-panel?action=addcredits&email=${email}&amount=${amount}`,{
+headers:{"x-admin":adminKey}
+})
+
+alert("Credits added")
+
+loadUsers()
+
+}
+
+async function disableUser(email){
+
+await fetch(`/api/admin-panel?action=disable&email=${email}`,{
+headers:{"x-admin":adminKey}
+})
+
+alert("User disabled")
+
+loadUsers()
+
+}
+
+</script>
+
+</body>
+
+</html>
