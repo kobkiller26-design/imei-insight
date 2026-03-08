@@ -1,18 +1,31 @@
-export default async function handler(req, res) {
+export default async function handler(req,res){
 
-const params = new URLSearchParams()
+try{
 
-params.append("username","WilnoEsteril565")
-params.append("apiaccesskey","KKNGz-qcQhZ-VTkNe-u2DfL-jy020-vwdZQ")
-params.append("request","imeiservice")
-
-let response = await fetch("https://dhru.checkimei.com/api/index.php",{
+const response=await fetch("https://dhru.checkimei.com/api/index.php",{
 method:"POST",
-body:params
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+
+username:"WilnoEsteril565",
+apiaccesskey:"zPxFG-eANVU-OpN1q-NpwpJ-XptdG-m2DYL",
+request:"SERVICE_LIST"
+
+})
 })
 
-let data = await response.text()
+const data=await response.json()
 
-res.status(200).json({services:data})
+res.status(200).json(data)
+
+}catch(err){
+
+res.status(500).json({
+error:"Service fetch failed"
+})
+
+}
 
 }
