@@ -1,26 +1,15 @@
-function checkIMEI(){
+fasync function checkIMEI() {
 
-let imei=document.getElementById("imeiInput").value;
-let result=document.getElementById("result");
+const imei = document.getElementById("imei").value
 
-if(imei.length!==15 || isNaN(imei)){
-result.innerHTML="❌ Invalid IMEI number";
-return;
+if(!imei){
+alert("Enter IMEI")
+return
 }
 
-result.innerHTML="🔍 Checking device...";
+const response = await fetch("/api/check?imei=" + imei)
+const data = await response.json()
 
-setTimeout(()=>{
-
-result.innerHTML=
-`;
-
-<b>Status:</b> Clean <br>
-<b>Device:</b> Smartphone <br>
-<b>Blacklist:</b> No <br>
-<b>Carrier:</b> Unknown
-`;
-
-},1000);
+document.getElementById("result").innerText = data.result
 
 }
