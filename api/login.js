@@ -1,22 +1,19 @@
-import {findUser} from "../lib/db.js"
-import {createToken} from "../lib/auth.js"
+let users=[]
 
-export default async function handler(req,res){
+export default function handler(req,res){
+
+if(req.method!=="POST"){
+return res.status(405).json({error:"Method not allowed"})
+}
 
 const {email,password}=req.body
 
-const user=findUser(email)
+const user=users.find(u=>u.email===email&&u.password===password)
 
 if(!user){
 return res.status(401).json({error:"Invalid login"})
 }
 
-if(user.password!==password){
-return res.status(401).json({error:"Invalid login"})
-}
-
-const token=createToken(user)
-
-res.json({token})
+res.status(200).json({success:true})
 
 }
