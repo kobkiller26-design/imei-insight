@@ -1,84 +1,47 @@
-async function pay(){
+document.addEventListener("DOMContentLoaded", () => {
 
-const r=await fetch("/api/create-checkout")
+const checkBtn = document.querySelector("#checkBtn")
+const imeiInput = document.querySelector("#imei")
+const serviceSelect = document.querySelector("#service")
+const resultBox = document.querySelector("#result")
 
-const data=await r.json()
+if (!checkBtn) return
 
-window.location=data.url
+checkBtn.addEventListener("click", async () => {
 
+const imei = imeiInput.value.trim()
+const service = serviceSelect.value
+
+if (!imei) {
+resultBox.textContent = "Enter IMEI"
+return
 }
 
-async function checkIMEI(){
+resultBox.textContent = "Checking..."
 
-const imei=document.getElementById("imei").value
+try {
 
-const token=localStorage.getItem("token")
-
-const service=document.getElementById("service").value
-
-const res=await fetch("/api/check?imei="+imei+"&service="+service,{
-headers:{
-authorization:token
-}
+const response = await fetch("/api/api-check", {
+method: "POST",
+headers: {
+"Content-Type": "application/json"
+},
+body: JSON.stringify({
+imei: imei,
+service: service
+})
 })
 
-const data=await res.json()
+const data = await response.json()
 
-document.getElementById("result").innerHTML=data.result
+resultBox.textContent = JSON.stringify(data, null, 2)
 
-}
+} catch (error) {
 
-async function login(){
-
-const email=document.getElementById("email").value
-const password=document.getElementById("password").value
-
-const res=await fetch("/api/login",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({email,password})
-})
-
-const data=await res.json()
-
-localStorage.setItem("token",data.token)
+resultBox.textContent = "Request failed"
 
 }
-
-async function loadServices(){
-
-const res=await fetch("/api/services-sync")
-
-const data=await res.json()
-
-const select=document.getElementById("service")
-
-if(!select) return
-
-select.innerHTML=""
-
-try{
-
-const services=JSON.parse(data.services)
-
-services.forEach(s=>{
-
-let option=document.createElement("option")
-
-option.value=s.serviceid
-
-option.text=s.servicename+" - $"+s.price
-
-select.appendChild(option)
 
 })
 
-}catch{
-
-select.innerHTML="<option>Services loading failed</option>"
-
-}
-
-}
-
-loadServices()
+})
