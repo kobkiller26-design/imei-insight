@@ -18,7 +18,7 @@ header{
 background:#111827;
 color:white;
 padding:20px;
-font-size:20px;
+font-size:22px;
 }
 
 .container{
@@ -69,6 +69,11 @@ padding:10px;
 border-bottom:1px solid #eee;
 }
 
+.credits{
+margin-top:15px;
+font-weight:bold;
+}
+
 </style>
 
 </head>
@@ -83,11 +88,15 @@ IMEI Insight Dashboard
 
 <div class="container">
 
-<h2>Check IMEI</h2>
+<h2>IMEI Check</h2>
 
 <input id="imei" placeholder="Enter IMEI number">
 
 <button onclick="checkIMEI()">Check IMEI</button>
+
+<button onclick="deposit()">Deposit $10 (10 Credits)</button>
+
+<div id="credits" class="credits"></div>
 
 <div id="result" class="result"></div>
 
@@ -118,6 +127,7 @@ const data=await res.json()
 document.getElementById("result").innerText=data.result
 
 loadHistory()
+loadCredits()
 
 }
 
@@ -145,14 +155,41 @@ document.getElementById("history").innerHTML=html
 
 }
 
+async function loadCredits(){
+
+const token=localStorage.getItem("token")
+
+const res=await fetch("/api/credits",{
+headers:{authorization:token}
+})
+
+const data=await res.json()
+
+document.getElementById("credits").innerText="Credits: "+data.credits
+
+}
+
+async function deposit(){
+
+const email=prompt("Enter your email")
+
+const res=await fetch("/api/deposit",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({email})
+})
+
+const data=await res.json()
+
+window.location=data.url
+
+}
+
 loadHistory()
+loadCredits()
 
 </script>
 
 </body>
 
 </html>
-
-<button onclick="deposit()">Deposit $10 (10 credits)</button>
-
-<div id="credits"></div>
