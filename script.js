@@ -1,4 +1,4 @@
-fasync function checkIMEI() {
+async function checkIMEI() {
 
 const imei = document.getElementById("imei").value
 
