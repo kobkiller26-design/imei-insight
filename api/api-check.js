@@ -10,7 +10,7 @@ return
 }
 
 /* =========================
-zPxFG-eANVU-OpN1q-NpwpJ-XptdG-m2DYL
+PUT YOUR API KEY HERE
 ========================= */
 
 const API_KEY = "zPxFG-eANVU-OpN1q-NpwpJ-XptdG-m2DYL"
