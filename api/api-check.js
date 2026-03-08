@@ -1,31 +1,14 @@
 export default async function handler(req, res) {
 
-const { imei, service } = req.body
-
 try {
 
-const response = await fetch("https://api.imei-server.com/v1/dhruFusion.php", {
+const { imei, service } = req.body
 
-method: "POST",
+const API_KEY = "zPxFG-eANVU-OpN1q-NpwpJ-XptdG-m2DYL
 
-headers: {
-"Content-Type": "application/json"
-},
+const url = `https://alpha.imeicheck.com/api/php-api/create?key=${API_KEY}&service=${service}&imei=${imei}`
 
-body: JSON.stringify({
-
-username: "WilnoEsteril565",
-apiaccesskey: "zPxFG-eANVU-OpN1q-NpwpJ-XptdG-m2DYL",
-
-request: "CHECK_IMEI",
-
-imei: imei,
-
-serviceid: service
-
-})
-
-})
+const response = await fetch(url)
 
 const data = await response.json()
 
@@ -34,7 +17,8 @@ res.status(200).json(data)
 } catch (error) {
 
 res.status(500).json({
-error: "API request failed"
+error: "API request failed",
+details: error.message
 })
 
 }
