@@ -1,167 +1,156 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>IMEI Check</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IMEI Insight</title>
 
 <style>
 
 body{
 font-family:Arial;
-background:#f5f5f5;
+background:#f2f2f2;
 display:flex;
 justify-content:center;
 align-items:center;
 height:100vh;
-margin:0;
 }
 
-.container{
+.box{
 background:white;
-padding:40px;
+padding:30px;
 border-radius:10px;
-width:320px;
-box-shadow:0 5px 20px rgba(0,0,0,0.1);
+width:340px;
+box-shadow:0 10px 20px rgba(0,0,0,0.1);
 }
 
-h1{
-text-align:center;
-margin-bottom:25px;
-}
-
-input{
+input,select{
 width:100%;
-padding:12px;
-margin-bottom:15px;
-border-radius:6px;
+padding:10px;
+margin:8px 0;
+border-radius:5px;
 border:1px solid #ccc;
-font-size:14px;
 }
 
 button{
-padding:12px 16px;
-border:none;
+width:100%;
+padding:10px;
 background:black;
 color:white;
-border-radius:6px;
+border:none;
+border-radius:5px;
 cursor:pointer;
-margin-right:10px;
+margin-top:6px;
 }
 
-button:hover{
-opacity:.8;
-}
-
-.divider{
-border-top:1px solid #ddd;
-margin:20px 0;
+pre{
+background:#eee;
+padding:10px;
+margin-top:10px;
+height:120px;
+overflow:auto;
 }
 
 </style>
+
 </head>
 
 <body>
 
-<div class="container">
+<div class="box">
 
-<h1>IMEI Check</h1>
+<h3>IMEI Check</h3>
 
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
 
-<button onclick="loginUser()">Login</button>
-<button onclick="registerUser()">Register</button>
+<button onclick="register()">Register</button>
+<button onclick="login()">Login</button>
 
-<div class="divider"></div>
+<hr>
+
+<select id="services"></select>
 
 <input id="imei" placeholder="Enter IMEI">
 
-<button onclick="pay()">Pay</button>
 <button onclick="checkIMEI()">Check</button>
+
+<pre id="result"></pre>
 
 </div>
 
 <script>
 
-async function loginUser(){
+async function loadServices(){
 
-const email=document.getElementById("email").value
-const password=document.getElementById("password").value
+const res = await fetch("/api/services")
+const data = await res.json()
 
-const res=await fetch("/api/login",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({email,password})
+const select = document.getElementById("services")
+
+select.innerHTML=""
+
+data.services.forEach(service=>{
+const option=document.createElement("option")
+option.value=service.serviceid
+option.text=service.servicename
+select.appendChild(option)
 })
 
-const data=await res.json()
-
-if(data.success){
-alert("Login successful")
-}else{
-alert("Login failed")
 }
 
-}
-
-async function registerUser(){
+async function register(){
 
 const email=document.getElementById("email").value
 const password=document.getElementById("password").value
 
 const res=await fetch("/api/register",{
 method:"POST",
-headers:{"Content-Type":"application/json"},
+headers:{'Content-Type':'application/json'},
 body:JSON.stringify({email,password})
 })
 
 const data=await res.json()
 
-if(data.success){
-alert("Account created")
-}else{
-alert("Registration failed")
+alert(data.success?"Account created":data.error)
+
 }
+
+async function login(){
+
+const email=document.getElementById("email").value
+const password=document.getElementById("password").value
+
+const res=await fetch("/api/login",{
+method:"POST",
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({email,password})
+})
+
+const data=await res.json()
+
+alert(data.success?"Login successful":data.error)
 
 }
 
 async function checkIMEI(){
 
 const imei=document.getElementById("imei").value
-
-if(!imei){
-alert("Enter IMEI first")
-return
-}
+const service=document.getElementById("services").value
 
 const res=await fetch("/api/api-check",{
 method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({imei})
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({imei,service})
 })
 
 const data=await res.json()
 
-alert(JSON.stringify(data,null,2))
+document.getElementById("result").innerText =
+JSON.stringify(data,null,2)
 
 }
 
-async function pay(){
-
-const res=await fetch("/api/create-checkout",{
-method:"POST"
-})
-
-const data=await res.json()
-
-if(data.url){
-window.location=data.url
-}else{
-alert("Payment error")
-}
-
-}
+loadServices()
 
 </script>
 
