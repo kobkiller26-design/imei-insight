@@ -1,47 +1,127 @@
-document.addEventListener("DOMContentLoaded", () => {
+<!DOCTYPE html>
+<html>
 
-const checkBtn = document.querySelector("#checkBtn")
-const imeiInput = document.querySelector("#imei")
-const serviceSelect = document.querySelector("#service")
-const resultBox = document.querySelector("#result")
+<head>
 
-if (!checkBtn) return
+<title>IMEI Check Tool</title>
 
-checkBtn.addEventListener("click", async () => {
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-const imei = imeiInput.value.trim()
-const service = serviceSelect.value
+<style>
 
-if (!imei) {
-resultBox.textContent = "Enter IMEI"
+body{
+font-family:Arial;
+background:#f4f6fb;
+margin:0;
+}
+
+header{
+background:#111827;
+color:white;
+padding:20px;
+font-size:22px;
+}
+
+.container{
+max-width:700px;
+margin:auto;
+margin-top:40px;
+background:white;
+padding:30px;
+border-radius:10px;
+box-shadow:0 10px 20px rgba(0,0,0,0.1);
+}
+
+input{
+width:100%;
+padding:12px;
+border:1px solid #ccc;
+border-radius:6px;
+margin-top:10px;
+}
+
+button{
+margin-top:10px;
+padding:12px;
+background:#2563eb;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+.result{
+margin-top:20px;
+background:#f1f5f9;
+padding:15px;
+border-radius:6px;
+white-space:pre-wrap;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+IMEI Check Tool
+</header>
+
+<div class="container">
+
+<h2>Enter IMEI</h2>
+
+<input id="imei" placeholder="Enter IMEI or Serial">
+
+<button onclick="checkIMEI()">Check IMEI</button>
+
+<div id="result" class="result"></div>
+
+</div>
+
+<script>
+
+async function checkIMEI(){
+
+const imei = document.getElementById("imei").value
+
+if(!imei){
+document.getElementById("result").innerText="Please enter an IMEI"
 return
 }
 
-resultBox.textContent = "Checking..."
+document.getElementById("result").innerText="Checking..."
 
-try {
+try{
 
-const response = await fetch("/api/api-check", {
-method: "POST",
-headers: {
-"Content-Type": "application/json"
-},
-body: JSON.stringify({
-imei: imei,
-service: service
-})
-})
+const res = await fetch("/api/api-check?imei="+imei)
 
-const data = await response.json()
+const data = await res.json()
 
-resultBox.textContent = JSON.stringify(data, null, 2)
+if(data.status==="success"){
 
-} catch (error) {
+document.getElementById("result").innerText =
+data.result
 
-resultBox.textContent = "Request failed"
+}else{
+
+document.getElementById("result").innerText =
+"Check failed"
 
 }
 
-})
+}catch(err){
 
-})
+document.getElementById("result").innerText =
+"Server error"
+
+}
+
+}
+
+</script>
+
+</body>
+
+</html>
