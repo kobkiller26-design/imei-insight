@@ -1,29 +1,44 @@
+async function pay(){
+
+const r=await fetch("/api/create-checkout")
+
+const data=await r.json()
+
+window.location=data.url
+
+}
+
 async function checkIMEI(){
 
-const imei = document.getElementById("imei").value.trim()
-const result = document.getElementById("result")
+const imei=document.getElementById("imei").value
 
-if(imei.length !== 15 || isNaN(imei)){
-result.innerHTML="IMEI must be 15 digits"
-return
+const token=localStorage.getItem("token")
+
+const res=await fetch("/api/check?imei="+imei,{
+headers:{
+authorization:token
+}
+})
+
+const data=await res.json()
+
+document.getElementById("result").innerHTML=data.result
+
 }
 
-result.innerHTML="Checking IMEI..."
+async function login(){
 
-try{
+const email=document.getElementById("email").value
+const password=document.getElementById("password").value
 
-const response = await fetch("/api/check?imei=" + imei)
-const data = await response.json()
+const res=await fetch("/api/login",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({email,password})
+})
 
-result.innerHTML=`
-<b>IMEI:</b> ${imei}<br><br>
-${data.result}
-`
+const data=await res.json()
 
-}catch(e){
-
-result.innerHTML="Error checking device"
-
-}
+localStorage.setItem("token",data.token)
 
 }
