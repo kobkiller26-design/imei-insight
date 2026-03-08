@@ -2,30 +2,41 @@
 <html>
 
 <head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>IMEI Insight</title>
+
 <link rel="stylesheet" href="style.css">
+
 </head>
 
 <body>
+
+<div class="container">
 
 <h1>IMEI Insight</h1>
 
 <h3>Login</h3>
 
 <input id="email" placeholder="Email">
-<input id="password" placeholder="Password">
+<input id="password" type="password" placeholder="Password">
 
 <button onclick="login()">Login</button>
+
+<hr>
 
 <h3>IMEI Check</h3>
 
 <input id="imei" placeholder="Enter IMEI">
 
 <button onclick="pay()">Pay</button>
-
-<button onclick="checkIMEI()">Check</button>
+<button onclick="check()">Check</button>
 
 <div id="result"></div>
+
+</div>
 
 <script src="script.js"></script>
 
