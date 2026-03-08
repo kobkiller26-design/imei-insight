@@ -1,28 +1,28 @@
 async function checkIMEI(){
 
 const imei = document.getElementById("imei").value.trim()
-const resultBox = document.getElementById("result")
+const result = document.getElementById("result")
 
 if(imei.length !== 15 || isNaN(imei)){
-resultBox.innerHTML = "IMEI must be 15 digits"
+result.innerHTML="IMEI must be 15 digits"
 return
 }
 
-resultBox.innerHTML = "Checking device..."
+result.innerHTML="Checking IMEI..."
 
 try{
 
 const response = await fetch("/api/check?imei=" + imei)
 const data = await response.json()
 
-resultBox.innerHTML = `
-<h3>IMEI Result</h3>
-<p>${data.result}</p>
+result.innerHTML=`
+<b>IMEI:</b> ${imei}<br><br>
+${data.result}
 `
 
-}catch(error){
+}catch(e){
 
-resultBox.innerHTML = "Unable to check IMEI"
+result.innerHTML="Error checking device"
 
 }
 
