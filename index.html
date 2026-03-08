@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 <title>IMEI Insight</title>
 <link rel="stylesheet" href="style.css">
@@ -7,24 +8,27 @@
 
 <body>
 
-<div class="container">
-
 <h1>IMEI Insight</h1>
-<p class="subtitle">Check device blacklist and carrier status</p>
 
-<div class="search-box">
+<h3>Login</h3>
 
-<input id="imei" placeholder="Enter 15 digit IMEI">
+<input id="email" placeholder="Email">
+<input id="password" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+<h3>IMEI Check</h3>
+
+<input id="imei" placeholder="Enter IMEI">
+
+<button onclick="pay()">Pay</button>
 
 <button onclick="checkIMEI()">Check</button>
 
-</div>
-
 <div id="result"></div>
-
-</div>
 
 <script src="script.js"></script>
 
 </body>
+
 </html>
