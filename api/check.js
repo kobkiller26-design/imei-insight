@@ -1,6 +1,5 @@
 import {verifyToken} from "../lib/auth.js"
-import {addHistory} from "../lib/db.js"
-import {limit} from "./ratelimit.js"
+import {useCredit,addHistory} from "../lib/db.js"
 
 export default async function handler(req,res){
 
@@ -12,11 +11,11 @@ if(!user){
 return res.status(401).json({error:"Login required"})
 }
 
-if(!limit(user.email)){
-return res.status(429).json({error:"Too many requests"})
+if(!useCredit(user.email)){
+return res.status(403).json({error:"No credits"})
 }
 
-const {imei}=req.query
+const imei=req.query.imei
 
 const params=new URLSearchParams()
 
@@ -35,8 +34,7 @@ const data=await response.text()
 addHistory({
 user:user.email,
 imei,
-result:data,
-date:new Date()
+result:data
 })
 
 res.json({result:data})
