@@ -1,50 +1,43 @@
-export default async function handler(req, res){
+export default async function handler(req,res){
 
-const { imei, service, apikey } = req.query
-
-// simple API key list (you can move this to database later)
-const users = [
-{key:"API_KEY_123", credits:100},
-{key:"API_KEY_456", credits:50}
-]
-
-const user = users.find(u=>u.key===KKNGz-qcQhZ-VTkNe-u2DfL-jy020-
-vwdZQ)
-
-if(!user){
-return res.json({error:"Invalid API key"})
-}
-
-if(user.credits <= 0){
-return res.json({error:"No credits"})
+if(req.method!=="POST"){
+return res.status(405).json({error:"Method not allowed"})
 }
 
 try{
 
-const dhru = await fetch("https://dhru.checkimei.com/api",{
+const {imei,service}=req.body
+
+if(!imei){
+return res.status(400).json({error:"IMEI required"})
+}
+
+const response=await fetch("https://dhru.checkimei.com/api/index.php",{
 method:"POST",
 headers:{
 "Content-Type":"application/json"
 },
 body:JSON.stringify({
+
+username:"WilnoEsteril565",
+apiaccesskey:"zPxFG-eANVU-OpN1q-NpwpJ-XptdG-m2DYL",
+request:"IMEI_CHECK",
 imei:imei,
-service:service
+serviceid:service
+
 })
 })
 
-const result = await dhru.json()
+const data=await response.json()
 
-user.credits -= 1
+res.status(200).json(data)
 
-res.json({
-imei:imei,
-result:result,
-credits_remaining:user.credits
+}catch(err){
+
+res.status(500).json({
+error:"Server error",
+details:err.message
 })
-
-}catch(e){
-
-res.json({error:"IMEI check failed"})
 
 }
 
