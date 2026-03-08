@@ -1,52 +1,61 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IMEI Insight</title>
+<title>IMEI Check</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 
 body{
-margin:0;
-height:100vh;
+font-family:Arial;
+background:#f5f5f5;
 display:flex;
 justify-content:center;
 align-items:center;
-background:#f4f6f9;
-font-family:Arial;
+height:100vh;
+margin:0;
 }
 
-.box{
+.container{
 background:white;
 padding:40px;
 border-radius:10px;
-box-shadow:0 10px 20px rgba(0,0,0,0.15);
-width:90%;
-max-width:500px;
+width:320px;
+box-shadow:0 5px 20px rgba(0,0,0,0.1);
+}
+
+h1{
 text-align:center;
+margin-bottom:25px;
 }
 
 input{
 width:100%;
 padding:12px;
-margin:10px 0;
-border:1px solid #ccc;
+margin-bottom:15px;
 border-radius:6px;
+border:1px solid #ccc;
+font-size:14px;
 }
 
 button{
-padding:12px 18px;
+padding:12px 16px;
 border:none;
 background:black;
 color:white;
 border-radius:6px;
-margin:5px;
+cursor:pointer;
+margin-right:10px;
 }
 
-.row{
-display:flex;
-gap:10px;
+button:hover{
+opacity:.8;
+}
+
+.divider{
+border-top:1px solid #ddd;
+margin:20px 0;
 }
 
 </style>
@@ -54,25 +63,107 @@ gap:10px;
 
 <body>
 
-<div class="box">
+<div class="container">
 
-<h2>IMEI Check</h2>
+<h1>IMEI Check</h1>
 
-<input placeholder="Email">
-<input placeholder="Password">
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
 
-<button>Login</button>
+<button onclick="loginUser()">Login</button>
+<button onclick="registerUser()">Register</button>
 
-<hr>
+<div class="divider"></div>
 
 <input id="imei" placeholder="Enter IMEI">
 
-<div class="row">
-<button>Pay</button>
-<button>Check</button>
-</div>
+<button onclick="pay()">Pay</button>
+<button onclick="checkIMEI()">Check</button>
 
 </div>
+
+<script>
+
+async function loginUser(){
+
+const email=document.getElementById("email").value
+const password=document.getElementById("password").value
+
+const res=await fetch("/api/login",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({email,password})
+})
+
+const data=await res.json()
+
+if(data.success){
+alert("Login successful")
+}else{
+alert("Login failed")
+}
+
+}
+
+async function registerUser(){
+
+const email=document.getElementById("email").value
+const password=document.getElementById("password").value
+
+const res=await fetch("/api/register",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({email,password})
+})
+
+const data=await res.json()
+
+if(data.success){
+alert("Account created")
+}else{
+alert("Registration failed")
+}
+
+}
+
+async function checkIMEI(){
+
+const imei=document.getElementById("imei").value
+
+if(!imei){
+alert("Enter IMEI first")
+return
+}
+
+const res=await fetch("/api/api-check",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({imei})
+})
+
+const data=await res.json()
+
+alert(JSON.stringify(data,null,2))
+
+}
+
+async function pay(){
+
+const res=await fetch("/api/create-checkout",{
+method:"POST"
+})
+
+const data=await res.json()
+
+if(data.url){
+window.location=data.url
+}else{
+alert("Payment error")
+}
+
+}
+
+</script>
 
 </body>
 </html>
