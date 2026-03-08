@@ -8,7 +8,8 @@ const users = [
 {key:"API_KEY_456", credits:50}
 ]
 
-const user = users.find(u=>u.key===apikey)
+const user = users.find(u=>u.key===KKNGz-qcQhZ-VTkNe-u2DfL-jy020-
+vwdZQ)
 
 if(!user){
 return res.json({error:"Invalid API key"})
