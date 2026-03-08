@@ -1,45 +1,124 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>IMEI Insight</title>
 
-<link rel="stylesheet" href="style.css">
+<style>
 
+*{
+box-sizing:border-box;
+margin:0;
+padding:0;
+font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+background:#f4f6f9;
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.container{
+background:white;
+padding:40px;
+border-radius:12px;
+box-shadow:0 10px 25px rgba(0,0,0,0.1);
+width:90%;
+max-width:600px;
+text-align:center;
+}
+
+h1{
+margin-bottom:20px;
+}
+
+input{
+width:100%;
+padding:12px;
+margin:10px 0;
+border-radius:6px;
+border:1px solid #ccc;
+}
+
+button{
+padding:12px 20px;
+border:none;
+background:black;
+color:white;
+border-radius:6px;
+cursor:pointer;
+margin:5px;
+}
+
+button:hover{
+opacity:.85;
+}
+
+.row{
+display:flex;
+gap:10px;
+margin-top:10px;
+}
+
+</style>
 </head>
 
 <body>
 
 <div class="container">
 
-<h1>IMEI Insight</h1>
-
-<h3>Login</h3>
+<h1>IMEI Check</h1>
 
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
 
 <button onclick="login()">Login</button>
 
-<hr>
-
-<h3>IMEI Check</h3>
+<hr style="margin:25px 0;">
 
 <input id="imei" placeholder="Enter IMEI">
 
-<button onclick="pay()">Pay</button>
-<button onclick="check()">Check</button>
+<div class="row">
+<button onclick="deposit()">Pay</button>
+<button onclick="checkIMEI()">Check</button>
+</div>
 
-<div id="result"></div>
+<p id="result" style="margin-top:20px;"></p>
 
 </div>
 
-<script src="script.js"></script>
+<script>
+
+async function login(){
+alert("Login system connected to backend");
+}
+
+async function deposit(){
+window.location="/deposit.html"
+}
+
+async function checkIMEI(){
+
+let imei=document.getElementById("imei").value
+
+let res=await fetch("/api/check",{
+method:"POST",
+headers:{ "Content-Type":"application/json"},
+body:JSON.stringify({ imei })
+})
+
+let data=await res.json()
+
+document.getElementById("result").innerText=JSON.stringify(data,null,2)
+
+}
+
+</script>
 
 </body>
-
 </html>
