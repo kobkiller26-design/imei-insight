@@ -4,8 +4,8 @@ try{
 
 const params = new URLSearchParams()
 
-params.append("username","YOUR_DHRU_USERNAME")
-params.append("apiaccesskey","YOUR_DHRU_API_KEY")
+params.append("username","WilnoEsteril565")
+params.append("apiaccesskey","KKNGz-qcQhZ-VTkNe-u2DfL-jy020-vwdZQ")
 params.append("request","services")
 
 const response = await fetch("https://dhru.checkimei.com/api",{
