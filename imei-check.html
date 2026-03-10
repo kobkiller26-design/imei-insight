@@ -20,12 +20,23 @@ background:#111827;
 color:white;
 padding:20px;
 font-size:22px;
+display:flex;
+align-items:center;
+gap:12px;
+}
+
+header a{
+color:#93c5fd;
+font-size:14px;
+text-decoration:none;
+margin-left:auto;
 }
 
 .container{
 max-width:700px;
 margin:auto;
 margin-top:40px;
+margin-bottom:40px;
 background:white;
 padding:30px;
 border-radius:10px;
@@ -38,24 +49,117 @@ padding:12px;
 border:1px solid #ccc;
 border-radius:6px;
 margin-top:10px;
+font-size:15px;
+box-sizing:border-box;
+}
+
+input.error-input{
+border-color:#ef4444;
 }
 
 button{
-margin-top:10px;
-padding:12px;
+margin-top:12px;
+padding:13px 20px;
 background:#2563eb;
 color:white;
 border:none;
 border-radius:6px;
 cursor:pointer;
+font-size:15px;
+width:100%;
 }
 
-.result{
-margin-top:20px;
+button:disabled{
+background:#93c5fd;
+cursor:not-allowed;
+}
+
+.spinner{
+display:inline-block;
+width:16px;
+height:16px;
+border:2px solid rgba(255,255,255,0.4);
+border-top-color:white;
+border-radius:50%;
+animation:spin 0.7s linear infinite;
+margin-right:8px;
+vertical-align:middle;
+}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.error-msg{
+color:#dc2626;
+font-size:13px;
+margin-top:6px;
+}
+
+.result-card{
+margin-top:24px;
+background:#f8fafc;
+border:1px solid #e2e8f0;
+border-radius:8px;
+overflow:hidden;
+}
+
+.result-card.success .result-header{
+background:#059669;
+color:white;
+}
+
+.result-card.error .result-header{
+background:#dc2626;
+color:white;
+}
+
+.result-header{
+padding:12px 16px;
+font-weight:bold;
+font-size:14px;
+}
+
+.result-body{
+padding:16px;
+}
+
+.result-row{
+display:flex;
+padding:8px 0;
+border-bottom:1px solid #f1f5f9;
+font-size:14px;
+gap:12px;
+}
+
+.result-row:last-child{
+border-bottom:none;
+}
+
+.result-label{
+color:#64748b;
+min-width:140px;
+flex-shrink:0;
+}
+
+.result-value{
+font-weight:500;
+color:#1e293b;
+word-break:break-all;
+}
+
+.result-raw{
 background:#f1f5f9;
-padding:15px;
+padding:12px;
 border-radius:6px;
+font-size:12px;
 white-space:pre-wrap;
+word-break:break-word;
+margin-top:12px;
+}
+
+.imei-hint{
+font-size:12px;
+color:#9ca3af;
+margin-top:4px;
 }
 
 </style>
@@ -66,59 +170,126 @@ white-space:pre-wrap;
 
 <header>
 IMEI Check Tool
+<a href="/">← Home</a>
 </header>
 
 <div class="container">
 
-<h2>Enter IMEI</h2>
+<h2 style="margin-top:0">Check Device IMEI</h2>
 
-<input id="imei" placeholder="Enter IMEI or Serial">
+<p style="color:#6b7280;font-size:14px;margin-top:0">Enter the 15-digit IMEI number found by dialling <strong>*#06#</strong> on your phone.</p>
 
-<button onclick="checkIMEI()">Check IMEI</button>
+<input id="imei" placeholder="Enter 15-digit IMEI" maxlength="15" pattern="\d{15}" inputmode="numeric" oninput="clearError()" aria-label="IMEI number" aria-describedby="input-error imei-hint">
+<p id="imei-hint" class="imei-hint">Example: 356938035643809</p>
+<p id="input-error" class="error-msg"></p>
 
-<div id="result" class="result"></div>
+<button id="check-btn" onclick="checkIMEI()">Check IMEI</button>
+
+<div id="result"></div>
 
 </div>
 
 <script>
 
-async function checkIMEI(){
+function clearError(){
+document.getElementById("input-error").textContent=""
+document.getElementById("imei").classList.remove("error-input")
+}
 
-const imei = document.getElementById("imei").value
+async function checkIMEI(){
+const imei=document.getElementById("imei").value.replace(/\s/g,"")
+const resultDiv=document.getElementById("result")
+const btn=document.getElementById("check-btn")
+const errEl=document.getElementById("input-error")
 
 if(!imei){
-document.getElementById("result").innerText="Please enter an IMEI"
+errEl.textContent="Please enter an IMEI number"
+document.getElementById("imei").classList.add("error-input")
+return
+}
+if(!/^\d{15}$/.test(imei)){
+errEl.textContent="IMEI must be exactly 15 digits (numbers only)"
+document.getElementById("imei").classList.add("error-input")
 return
 }
 
-document.getElementById("result").innerText="Checking..."
+btn.disabled=true
+btn.innerHTML='<span class="spinner"></span>Checking IMEI...'
+resultDiv.innerHTML=""
 
 try{
+const res=await fetch("/api/check?imei="+encodeURIComponent(imei))
+const data=await res.json()
 
-const res = await fetch("/api/api-check?imei="+imei)
-
-const data = await res.json()
-
-if(data.status==="success"){
-
-document.getElementById("result").innerText =
-data.result
-
+if(data.status==="error"||!res.ok){
+showError(data.error||"IMEI check failed")
 }else{
-
-document.getElementById("result").innerText =
-"Check failed"
-
+showSuccess(imei,data.result)
 }
-
 }catch(err){
-
-document.getElementById("result").innerText =
-"Server error"
-
+showError("Network error – please check your connection and try again")
+}finally{
+btn.disabled=false
+btn.textContent="Check IMEI"
+}
 }
 
+function showError(message){
+document.getElementById("result").innerHTML=`
+<div class="result-card error">
+<div class="result-header">❌ Check Failed</div>
+<div class="result-body">${escapeHTML(message)}</div>
+</div>`
 }
+
+function showSuccess(imei,info){
+let rows=`<div class="result-row"><span class="result-label">IMEI</span><span class="result-value">${escapeHTML(imei)}</span></div>`
+let hasRows=false
+
+if(info&&typeof info==="object"){
+const labels={
+brand:"Brand",model:"Model",modelname:"Model Name",
+os:"Operating System",released:"Release Year",
+network:"Network",status:"Status",
+simlock:"SIM Lock",warranty:"Warranty",
+blacklisted:"Blacklisted"
+}
+Object.entries(labels).forEach(([key,label])=>{
+const val=info[key]||info[key.toLowerCase()]
+if(val!==undefined&&val!==null&&val!==""){
+rows+=`<div class="result-row"><span class="result-label">${label}</span><span class="result-value">${escapeHTML(String(val))}</span></div>`
+hasRows=true
+}
+})
+}
+
+const rawJson=JSON.stringify(info,null,2)
+const rawSection=`<div class="result-raw">${escapeHTML(rawJson)}</div>`
+
+document.getElementById("result").innerHTML=`
+<div class="result-card success">
+<div class="result-header">✅ IMEI Check Complete</div>
+<div class="result-body">
+${rows}
+${!hasRows&&info?rawSection:""}
+</div>
+</div>`
+}
+
+function escapeHTML(str){
+return String(str)
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+}
+
+// Allow pressing Enter in the input
+document.addEventListener("DOMContentLoaded",()=>{
+document.getElementById("imei").addEventListener("keyup",e=>{
+if(e.key==="Enter") checkIMEI()
+})
+})
 
 </script>
 

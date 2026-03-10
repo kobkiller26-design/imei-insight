@@ -1,0 +1,21 @@
+{
+  "name": "imei-insight",
+  "version": "1.0.0",
+  "description": "IMEI checking application with Vercel deployment",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod",
+    "test": "node --test tests/api.test.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "vercel": "^41.4.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
