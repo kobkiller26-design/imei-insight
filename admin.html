@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IMEI Insight – Admin</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;background:#111827;color:#e5e7eb;min-height:100vh}
+    header{background:#1f2937;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #374151}
+    header h1{font-size:20px;font-weight:700;color:#f9fafb}
+    header span{font-size:13px;color:#9ca3af}
+    .badge{background:#dc2626;color:white;font-size:11px;padding:2px 8px;border-radius:9999px;margin-left:8px}
+    .container{max-width:1200px;margin:0 auto;padding:24px}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+    .stat-card{background:#1f2937;border:1px solid #374151;border-radius:8px;padding:20px}
+    .stat-card .label{font-size:12px;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+    .stat-card .value{font-size:28px;font-weight:700;color:#f9fafb}
+    .stat-card .sub{font-size:12px;color:#6b7280;margin-top:4px}
+    .panel{background:#1f2937;border:1px solid #374151;border-radius:8px;padding:20px;margin-bottom:24px}
+    .panel h2{font-size:16px;font-weight:600;color:#f9fafb;margin-bottom:16px}
+    .filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+    .filters input,.filters select{background:#111827;border:1px solid #374151;color:#e5e7eb;padding:8px 12px;border-radius:6px;font-size:13px;min-width:140px}
+    .filters input:focus,.filters select:focus{outline:none;border-color:#3b82f6}
+    .btn{padding:8px 16px;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:500}
+    .btn-primary{background:#2563eb;color:white}
+    .btn-primary:hover{background:#1d4ed8}
+    .btn-danger{background:#dc2626;color:white}
+    .btn-danger:hover{background:#b91c1c}
+    .btn-success{background:#059669;color:white}
+    .btn-success:hover{background:#047857}
+    .btn-ghost{background:transparent;color:#9ca3af;border:1px solid #374151}
+    .btn-ghost:hover{background:#374151}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    thead tr{background:#111827}
+    th{padding:10px 12px;text-align:left;color:#9ca3af;font-weight:500;border-bottom:1px solid #374151}
+    td{padding:10px 12px;border-bottom:1px solid #1f2937;color:#d1d5db;vertical-align:top}
+    tr:hover td{background:#374151}
+    .badge-clean{background:#065f46;color:#6ee7b7;padding:2px 8px;border-radius:4px;font-size:11px}
+    .badge-blacklisted{background:#7f1d1d;color:#fca5a5;padding:2px 8px;border-radius:4px;font-size:11px}
+    .badge-unknown{background:#374151;color:#9ca3af;padding:2px 8px;border-radius:4px;font-size:11px}
+    .pagination{display:flex;align-items:center;justify-content:space-between;margin-top:16px}
+    .pagination .info{font-size:13px;color:#9ca3af}
+    .pagination .pages{display:flex;gap:6px}
+    .page-btn{padding:6px 12px;border:1px solid #374151;background:transparent;color:#9ca3af;border-radius:4px;cursor:pointer;font-size:13px}
+    .page-btn.active{background:#2563eb;color:white;border-color:#2563eb}
+    .page-btn:disabled{opacity:.4;cursor:not-allowed}
+    .detail-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;justify-content:center;align-items:center}
+    .detail-modal.open{display:flex}
+    .modal-box{background:#1f2937;border:1px solid #374151;border-radius:10px;padding:24px;max-width:500px;width:100%;position:relative}
+    .modal-box h3{font-size:16px;font-weight:600;margin-bottom:16px;color:#f9fafb}
+    .modal-box pre{background:#111827;border-radius:6px;padding:12px;font-size:12px;overflow:auto;max-height:300px;color:#d1d5db}
+    .modal-close{position:absolute;top:12px;right:16px;background:none;border:none;color:#9ca3af;font-size:20px;cursor:pointer}
+    .error-msg{color:#f87171;font-size:13px;margin-top:8px}
+    .loading{text-align:center;padding:40px;color:#6b7280}
+    #loginForm{max-width:360px;margin:80px auto;background:#1f2937;border:1px solid #374151;border-radius:10px;padding:32px}
+    #loginForm h2{font-size:18px;font-weight:600;margin-bottom:20px;color:#f9fafb;text-align:center}
+    #loginForm input{width:100%;padding:10px 12px;background:#111827;border:1px solid #374151;color:#e5e7eb;border-radius:6px;font-size:14px;margin-bottom:12px}
+    .top-brands{display:flex;flex-wrap:wrap;gap:8px}
+    .brand-tag{background:#1e3a5f;color:#93c5fd;padding:4px 10px;border-radius:4px;font-size:12px}
+    .export-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+  </style>
+</head>
+<body>
+
+<!-- Login Gate -->
+<div id="loginForm">
+  <h2>Admin Login</h2>
+  <input id="adminEmail" type="email" placeholder="Email" autocomplete="username">
+  <input id="adminPassword" type="password" placeholder="Password" autocomplete="current-password">
+  <button class="btn btn-primary" style="width:100%;padding:10px" onclick="adminLogin()">Login</button>
+  <div id="loginError" class="error-msg"></div>
+</div>
+
+<!-- Admin Dashboard (hidden until auth) -->
+<div id="adminApp" style="display:none">
+  <header>
+    <div style="display:flex;align-items:center;gap:8px">
+      <h1>IMEI Insight</h1>
+      <span class="badge">ADMIN</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span id="adminEmail2" style="font-size:13px;color:#9ca3af"></span>
+      <button class="btn btn-ghost" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- Stats -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="label">Total Checks</div>
+        <div class="value" id="statTotal">–</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Today's Checks</div>
+        <div class="value" id="statToday">–</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Total Users</div>
+        <div class="value" id="statUsers">–</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Top Brands</div>
+        <div class="value" style="font-size:14px;margin-top:4px">
+          <div id="statBrands" class="top-brands"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Checks Table -->
+    <div class="panel">
+      <h2>All IMEI Checks</h2>
+
+      <!-- Filters -->
+      <div class="filters">
+        <input id="fUser" placeholder="Filter by user" oninput="applyFilters()">
+        <input id="fIMEI" placeholder="Filter by IMEI" oninput="applyFilters()">
+        <select id="fStatus" onchange="applyFilters()">
+          <option value="">All statuses</option>
+          <option value="clean">Clean</option>
+          <option value="blacklisted">Blacklisted</option>
+        </select>
+        <input id="fFrom" type="date" onchange="applyFilters()" title="From date">
+        <input id="fTo" type="date" onchange="applyFilters()" title="To date">
+        <button class="btn btn-ghost" onclick="resetFilters()">Reset</button>
+      </div>
+
+      <!-- Export row -->
+      <div class="export-row">
+        <button class="btn btn-success" onclick="exportCSV(false)">⬇ Export My Checks</button>
+        <button class="btn btn-success" onclick="exportCSV(true)">⬇ Export All (Admin)</button>
+      </div>
+
+      <div id="tableWrap">
+        <div class="loading">Loading checks…</div>
+      </div>
+
+      <div class="pagination" id="paginationBar" style="display:none">
+        <span class="info" id="pageInfo"></span>
+        <div class="pages" id="pageButtons"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="detail-modal" id="detailModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h3>Check Details</h3>
+    <pre id="modalContent"></pre>
+  </div>
+</div>
+
+<script>
+let token = null
+let currentPage = 1
+let lastQuery = {}
+
+function adminLogin() {
+  const email = document.getElementById('adminEmail').value
+  const password = document.getElementById('adminPassword').value
+  document.getElementById('loginError').textContent = ''
+
+  fetch('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.token) {
+        document.getElementById('loginError').textContent = data.error || 'Login failed'
+        return
+      }
+      token = data.token
+      localStorage.setItem('adminToken', token)
+      checkAdminAccess()
+    })
+    .catch(() => {
+      document.getElementById('loginError').textContent = 'Network error'
+    })
+}
+
+function checkAdminAccess() {
+  fetch('/api/admin-checks?page=1', {
+    headers: { authorization: token }
+  })
+    .then(r => {
+      if (r.status === 403) {
+        document.getElementById('loginError').textContent = 'Admin access required'
+        return null
+      }
+      return r.json()
+    })
+    .then(data => {
+      if (!data) return
+      document.getElementById('loginForm').style.display = 'none'
+      document.getElementById('adminApp').style.display = 'block'
+      document.getElementById('adminEmail2').textContent = localStorage.getItem('adminEmail') || ''
+      renderStats(data.stats)
+      renderTable(data)
+    })
+    .catch(() => {
+      document.getElementById('loginError').textContent = 'Failed to load admin data'
+    })
+}
+
+function logout() {
+  token = null
+  localStorage.removeItem('adminToken')
+  location.reload()
+}
+
+function renderStats(stats) {
+  if (!stats) return
+  document.getElementById('statTotal').textContent = stats.totalChecks ?? '–'
+  document.getElementById('statToday').textContent = stats.todayChecks ?? '–'
+  document.getElementById('statUsers').textContent = stats.totalUsers ?? '–'
+  const brandsEl = document.getElementById('statBrands')
+  brandsEl.innerHTML = ''
+  ;(stats.topBrands || []).forEach(b => {
+    const span = document.createElement('span')
+    span.className = 'brand-tag'
+    span.textContent = `${b.brand} (${b.count})`
+    brandsEl.appendChild(span)
+  })
+}
+
+function renderTable(data) {
+  const wrap = document.getElementById('tableWrap')
+  const pagination = document.getElementById('paginationBar')
+
+  if (!data.checks || data.checks.length === 0) {
+    wrap.innerHTML = '<div class="loading">No checks found.</div>'
+    pagination.style.display = 'none'
+    return
+  }
+
+  let html = `<table>
+    <thead><tr>
+      <th>IMEI</th><th>User</th><th>Brand</th><th>Model</th>
+      <th>Blacklist</th><th>Date</th><th>Actions</th>
+    </tr></thead><tbody>`
+
+  data.checks.forEach(c => {
+    const bl = c.result_json?.blacklistStatus || ''
+    let blBadge = `<span class="badge-unknown">${bl || 'N/A'}</span>`
+    if (bl.toLowerCase() === 'clean') blBadge = `<span class="badge-clean">Clean</span>`
+    else if (bl.toLowerCase() === 'blacklisted') blBadge = `<span class="badge-blacklisted">Blacklisted</span>`
+
+    const dateStr = c.created_at ? new Date(c.created_at).toLocaleString() : '–'
+    const safeId = encodeURIComponent(c.id)
+    html += `<tr>
+      <td><code style="font-size:12px">${c.imei}</code></td>
+      <td style="color:#9ca3af;font-size:12px">${c.user_id || 'anon'}</td>
+      <td>${c.result_json?.brand || '–'}</td>
+      <td>${c.result_json?.deviceModel || '–'}</td>
+      <td>${blBadge}</td>
+      <td style="font-size:12px;color:#9ca3af">${dateStr}</td>
+      <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="showDetail('${safeId}')">Details</button></td>
+    </tr>`
+  })
+
+  html += '</tbody></table>'
+  wrap.innerHTML = html
+
+  // Pagination
+  pagination.style.display = 'flex'
+  document.getElementById('pageInfo').textContent =
+    `Showing ${(data.page - 1) * data.pageSize + 1}–${Math.min(data.page * data.pageSize, data.total)} of ${data.total}`
+
+  const buttons = document.getElementById('pageButtons')
+  buttons.innerHTML = ''
+
+  const prev = document.createElement('button')
+  prev.className = 'page-btn'
+  prev.textContent = '←'
+  prev.disabled = data.page <= 1
+  prev.onclick = () => loadPage(data.page - 1)
+  buttons.appendChild(prev)
+
+  const pages = Math.min(data.totalPages, 5)
+  for (let i = 1; i <= pages; i++) {
+    const b = document.createElement('button')
+    b.className = 'page-btn' + (i === data.page ? ' active' : '')
+    b.textContent = i
+    b.onclick = () => loadPage(i)
+    buttons.appendChild(b)
+  }
+
+  const next = document.createElement('button')
+  next.className = 'page-btn'
+  next.textContent = '→'
+  next.disabled = data.page >= data.totalPages
+  next.onclick = () => loadPage(data.page + 1)
+  buttons.appendChild(next)
+
+  // Store checks for modal
+  window._checks = data.checks
+}
+
+function loadPage(page) {
+  currentPage = page
+  loadChecks()
+}
+
+function buildQuery() {
+  const params = new URLSearchParams()
+  params.set('page', currentPage)
+  const user = document.getElementById('fUser').value.trim()
+  const imei = document.getElementById('fIMEI').value.trim()
+  const status = document.getElementById('fStatus').value
+  const from = document.getElementById('fFrom').value
+  const to = document.getElementById('fTo').value
+  if (user) params.set('user', user)
+  if (imei) params.set('imei', imei)
+  if (status) params.set('status', status)
+  if (from) params.set('from', from)
+  if (to) params.set('to', to)
+  return params.toString()
+}
+
+function applyFilters() {
+  currentPage = 1
+  loadChecks()
+}
+
+function resetFilters() {
+  document.getElementById('fUser').value = ''
+  document.getElementById('fIMEI').value = ''
+  document.getElementById('fStatus').value = ''
+  document.getElementById('fFrom').value = ''
+  document.getElementById('fTo').value = ''
+  currentPage = 1
+  loadChecks()
+}
+
+function loadChecks() {
+  const query = buildQuery()
+  document.getElementById('tableWrap').innerHTML = '<div class="loading">Loading…</div>'
+  fetch('/api/admin-checks?' + query, {
+    headers: { authorization: token }
+  })
+    .then(r => r.json())
+    .then(data => {
+      renderStats(data.stats)
+      renderTable(data)
+    })
+    .catch(() => {
+      document.getElementById('tableWrap').innerHTML = '<div class="loading" style="color:#f87171">Failed to load checks.</div>'
+    })
+}
+
+function showDetail(id) {
+  const check = (window._checks || []).find(c => encodeURIComponent(c.id) === id)
+  if (!check) return
+  document.getElementById('modalContent').textContent = JSON.stringify(check, null, 2)
+  document.getElementById('detailModal').classList.add('open')
+}
+
+function closeModal() {
+  document.getElementById('detailModal').classList.remove('open')
+}
+
+document.getElementById('detailModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal()
+})
+
+function exportCSV(all) {
+  const params = new URLSearchParams()
+  if (all) params.set('all', 'true')
+  const from = document.getElementById('fFrom').value
+  const to = document.getElementById('fTo').value
+  if (from) params.set('from', from)
+  if (to) params.set('to', to)
+
+  const url = '/api/export?' + params.toString()
+  const a = document.createElement('a')
+  a.href = url
+  a.setAttribute('download', '')
+  // Pass token via query param for file download (no custom headers)
+  a.href = url + '&_token=' + encodeURIComponent(token || '')
+  a.click()
+}
+
+// Auto-restore session
+const savedToken = localStorage.getItem('adminToken')
+if (savedToken) {
+  token = savedToken
+  checkAdminAccess()
+}
+</script>
+</body>
+</html>
