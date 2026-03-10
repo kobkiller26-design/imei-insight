@@ -1,0 +1,22 @@
+{
+  "name": "imei-insight",
+  "version": "1.0.0",
+  "description": "IMEI checking SaaS - check device information by IMEI number",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev --listen 3000",
+    "build": "echo 'Static site with Vercel serverless functions - no build required'",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test:coverage": "node --experimental-vm-modules node_modules/.bin/jest --coverage",
+    "setup": "bash scripts/setup.sh",
+    "deploy": "bash scripts/deploy.sh"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.17.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.6.3"
+  }
+}
