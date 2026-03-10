@@ -1,0 +1,2 @@
+{\n  "version": 2,\n  "builds": [\n    {\n      "src": "index.js",\n      "use": "@vercel/node"\n    }\n  ],\n  "routes": [\n    {\n      "src": "/(.*)",\n      "dest": "/index.js"\n    }\n  ],\n  "env": {\n    "API_URL": "https://api.example.com"\n  },\n  "buildCommand": "npm run build",\n  "outputDirectory": "dist"
+}
