@@ -1,0 +1,1 @@
+{\n  "name": "imei-checking-application",\n  "version": "1.0.0",\n  "scripts": {\n    "deploy": "echo 'Deploying application'",\n    "dev": "echo 'Starting development server'",\n    "build": "echo 'Building application'"\n  },\n  "dependencies": {},\n  "devDependencies": {}\n}
