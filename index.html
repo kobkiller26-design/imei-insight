@@ -1,12 +1,21 @@
-<!DOCTYPE html> 
-<html lang="en"> 
-<head> 
-    <meta charset="UTF-8"> 
-    <title>IMEI Checker</title> 
-</head> 
-<body> 
-    <h1>IMEI Checker</h1> 
-    <input type="text" id="imei" placeholder="Enter IMEI"> 
-    <button onclick="alert('IMEI: ' + document.getElementById('imei').value)">Check</button> 
-</body> 
-</html> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMEI Checker</title>
+    <style>
+        body { font-family: Arial; background: #f0f0f0; padding: 20px; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 8px; }
+        input { width: 100%%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; }
+        button { width: 100%%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>IMEI Checker</h1>
+        <input type="text" id="imei" placeholder="Enter IMEI number">
+        <button onclick="alert('IMEI: ' + document.getElementById('imei').value)">Check IMEI</button>
+    </div>
+</body>
+</html>
