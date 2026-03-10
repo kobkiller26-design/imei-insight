@@ -12,16 +12,22 @@ background:#f2f2f2;
 display:flex;
 justify-content:center;
 align-items:center;
-height:100vh;
+min-height:100vh;
+margin:0;
+padding:20px;
+box-sizing:border-box;
 }
 
 .box{
 background:white;
 padding:30px;
 border-radius:10px;
-width:340px;
+width:100%;
+max-width:380px;
 box-shadow:0 10px 20px rgba(0,0,0,0.1);
 }
+
+h3{margin-top:0}
 
 input,select{
 width:100%;
@@ -29,26 +35,71 @@ padding:10px;
 margin:8px 0;
 border-radius:5px;
 border:1px solid #ccc;
+box-sizing:border-box;
+font-size:15px;
 }
 
 button{
 width:100%;
-padding:10px;
-background:black;
+padding:12px;
+background:#2563eb;
 color:white;
 border:none;
 border-radius:5px;
 cursor:pointer;
 margin-top:6px;
+font-size:15px;
 }
 
-pre{
-background:#eee;
-padding:10px;
-margin-top:10px;
-height:120px;
-overflow:auto;
+button:disabled{
+background:#93c5fd;
+cursor:not-allowed;
 }
+
+button.secondary{
+background:#6b7280;
+}
+
+.result-card{
+background:#f1f5f9;
+padding:15px;
+margin-top:16px;
+border-radius:8px;
+font-size:13px;
+line-height:1.6;
+word-break:break-word;
+}
+
+.result-card.error{
+background:#fee2e2;
+color:#991b1b;
+}
+
+.result-card.success{
+background:#d1fae5;
+}
+
+.spinner{
+display:inline-block;
+width:16px;
+height:16px;
+border:2px solid rgba(255,255,255,0.4);
+border-top-color:white;
+border-radius:50%;
+animation:spin 0.7s linear infinite;
+margin-right:8px;
+vertical-align:middle;
+}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.status{
+font-size:12px;
+color:#6b7280;
+margin-top:6px;
+}
+
+hr{border:none;border-top:1px solid #e5e7eb;margin:16px 0}
 
 </style>
 
@@ -58,99 +109,126 @@ overflow:auto;
 
 <div class="box">
 
-<h3>IMEI Check</h3>
+<h3>IMEI Insight</h3>
 
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
+<input id="email" placeholder="Email" type="email" autocomplete="email" aria-label="Email address">
+<input id="password" type="password" placeholder="Password" autocomplete="current-password" aria-label="Password">
 
 <button onclick="register()">Register</button>
-<button onclick="login()">Login</button>
+<button class="secondary" onclick="login()">Login</button>
+
+<p id="auth-status" class="status"></p>
 
 <hr>
 
-<select id="services"></select>
+<input id="imei" placeholder="Enter 15-digit IMEI" maxlength="15" pattern="\d{15}" inputmode="numeric">
 
-<input id="imei" placeholder="Enter IMEI">
+<button id="check-btn" onclick="checkIMEI()">Check IMEI</button>
 
-<button onclick="checkIMEI()">Check</button>
-
-<pre id="result"></pre>
+<div id="result"></div>
 
 </div>
 
 <script>
 
-async function loadServices(){
-
-const res = await fetch("/api/services")
-const data = await res.json()
-
-const select = document.getElementById("services")
-
-select.innerHTML=""
-
-data.services.forEach(service=>{
-const option=document.createElement("option")
-option.value=service.serviceid
-option.text=service.servicename
-select.appendChild(option)
-})
-
-}
-
 async function register(){
-
-const email=document.getElementById("email").value
+const email=document.getElementById("email").value.trim()
 const password=document.getElementById("password").value
+const status=document.getElementById("auth-status")
+
+if(!email||!password){
+status.textContent="Please enter email and password"
+return
+}
 
 const res=await fetch("/api/register",{
 method:"POST",
-headers:{'Content-Type':'application/json'},
+headers:{"Content-Type":"application/json"},
 body:JSON.stringify({email,password})
 })
-
 const data=await res.json()
-
-alert(data.success?"Account created":data.error)
-
+status.textContent=data.success?"Account created! You can now login.":data.error||"Registration failed"
 }
 
 async function login(){
-
-const email=document.getElementById("email").value
+const email=document.getElementById("email").value.trim()
 const password=document.getElementById("password").value
+const status=document.getElementById("auth-status")
+
+if(!email||!password){
+status.textContent="Please enter email and password"
+return
+}
 
 const res=await fetch("/api/login",{
 method:"POST",
-headers:{'Content-Type':'application/json'},
+headers:{"Content-Type":"application/json"},
 body:JSON.stringify({email,password})
 })
-
 const data=await res.json()
-
-alert(data.success?"Login successful":data.error)
-
+if(data.success){
+localStorage.setItem("token",data.token||"")
+localStorage.setItem("email",email)
+status.textContent="Login successful!"
+}else{
+status.textContent=data.error||"Login failed"
+}
 }
 
 async function checkIMEI(){
+const imei=document.getElementById("imei").value.replace(/\s/g,"")
+const resultDiv=document.getElementById("result")
+const btn=document.getElementById("check-btn")
 
-const imei=document.getElementById("imei").value
-const service=document.getElementById("services").value
-
-const res=await fetch("/api/api-check",{
-method:"POST",
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({imei,service})
-})
-
-const data=await res.json()
-
-document.getElementById("result").innerText =
-JSON.stringify(data,null,2)
-
+if(!imei){
+showResult("Please enter an IMEI","error")
+return
+}
+if(!/^\d{15}$/.test(imei)){
+showResult("IMEI must be exactly 15 digits","error")
+return
 }
 
-loadServices()
+btn.disabled=true
+btn.innerHTML='<span class="spinner"></span>Checking...'
+resultDiv.innerHTML=""
+
+try{
+const res=await fetch("/api/check?imei="+encodeURIComponent(imei))
+const data=await res.json()
+
+if(data.status==="error"){
+showResult(data.error||"Check failed","error")
+}else{
+const info=data.result
+showResult(formatResult(imei,info),"success")
+}
+}catch(err){
+showResult("Network error – please try again","error")
+}finally{
+btn.disabled=false
+btn.textContent="Check IMEI"
+}
+}
+
+function formatResult(imei,info){
+if(!info||typeof info!=="object"){
+return `<strong>IMEI:</strong> ${imei}\n${typeof info==="string"?info:"No result"}`
+}
+let lines=[`<strong>IMEI:</strong> ${imei}`]
+Object.entries(info).forEach(([k,v])=>{
+if(v!==null&&v!==undefined&&v!==""){
+lines.push(`<strong>${k}:</strong> ${v}`)
+}
+})
+return lines.join("<br>")
+}
+
+function showResult(html,type){
+const div=document.getElementById("result")
+div.className="result-card "+(type||"")
+div.innerHTML=html
+}
 
 </script>
 
