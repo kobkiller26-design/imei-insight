@@ -9,26 +9,28 @@
 
 body{
 font-family:Arial;
-background:#f5f7fb;
+background:#111827;
 margin:0;
 padding:0;
+color:#f9fafb;
 }
 
 header{
-background:#111827;
+background:#0f172a;
 color:white;
 padding:20px;
 font-size:22px;
+border-bottom:1px solid #1e293b;
 }
 
 .container{
 max-width:900px;
 margin:auto;
 margin-top:40px;
-background:white;
+background:#1e293b;
 padding:30px;
 border-radius:10px;
-box-shadow:0 10px 25px rgba(0,0,0,0.1);
+box-shadow:0 10px 25px rgba(0,0,0,0.3);
 }
 
 select,input{
@@ -36,7 +38,10 @@ width:100%;
 padding:12px;
 margin-top:10px;
 border-radius:6px;
-border:1px solid #ccc;
+border:1px solid #334155;
+background:#0f172a;
+color:#f9fafb;
+box-sizing:border-box;
 }
 
 button{
@@ -50,14 +55,81 @@ cursor:pointer;
 }
 
 button:hover{
-background:#1e4ed8;
+background:#1d4ed8;
 }
+
+button:disabled{
+background:#475569;
+cursor:not-allowed;
+}
+
+.error{
+margin-top:16px;
+background:#450a0a;
+border:1px solid #7f1d1d;
+color:#fca5a5;
+padding:14px;
+border-radius:6px;
+}
+
+.result-card{
+margin-top:20px;
+background:#0f172a;
+border-radius:10px;
+overflow:hidden;
+border:1px solid #334155;
+}
+
+.result-card-header{
+background:#1e293b;
+padding:14px 20px;
+font-size:16px;
+font-weight:bold;
+border-bottom:1px solid #334155;
+}
+
+.result-card-body{
+padding:20px;
+}
+
+.field{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:10px 0;
+border-bottom:1px solid #1e293b;
+}
+
+.field:last-child{
+border-bottom:none;
+}
+
+.field-label{
+color:#94a3b8;
+font-size:14px;
+}
+
+.field-value{
+font-weight:bold;
+color:#f1f5f9;
+text-align:right;
+}
+
+.badge{
+display:inline-block;
+padding:3px 10px;
+border-radius:20px;
+font-size:13px;
+font-weight:bold;
+}
+
+.badge-green{background:#14532d;color:#86efac;}
+.badge-red{background:#450a0a;color:#fca5a5;}
+.badge-yellow{background:#422006;color:#fcd34d;}
+.badge-gray{background:#1e293b;color:#94a3b8;border:1px solid #334155;}
 
 .result{
 margin-top:20px;
-padding:15px;
-background:#f1f5f9;
-border-radius:6px;
 }
 
 .history{
@@ -66,12 +138,14 @@ margin-top:30px;
 
 .history-item{
 padding:10px;
-border-bottom:1px solid #eee;
+border-bottom:1px solid #334155;
+color:#94a3b8;
 }
 
 .credits{
 margin-top:15px;
 font-weight:bold;
+color:#60a5fa;
 }
 
 </style>
@@ -100,7 +174,19 @@ IMEI Insight Dashboard
 
 <div id="credits" class="credits"></div>
 
-<div id="result" class="result"></div>
+<div id="errorBox" class="error" style="display:none"></div>
+
+<div id="resultCard" class="result-card" style="display:none">
+<div class="result-card-header">&#128247; Device Information</div>
+<div class="result-card-body">
+<div class="field"><span class="field-label">Device Model</span><span class="field-value" id="f-model">—</span></div>
+<div class="field"><span class="field-label">Brand</span><span class="field-value" id="f-brand">—</span></div>
+<div class="field"><span class="field-label">IMEI Status</span><span class="field-value" id="f-status">—</span></div>
+<div class="field"><span class="field-label">Blacklist Status</span><span class="field-value" id="f-blacklist">—</span></div>
+<div class="field"><span class="field-label">Carrier</span><span class="field-value" id="f-carrier">—</span></div>
+<div class="field"><span class="field-label">Country</span><span class="field-value" id="f-country">—</span></div>
+</div>
+</div>
 
 <div class="history">
 
@@ -116,18 +202,86 @@ IMEI Insight Dashboard
 
 async function checkIMEI(){
 
-const imei=document.getElementById("imei").value
-const service=document.getElementById("service").value
-
+const imei=document.getElementById("imei").value.trim()
 const token=localStorage.getItem("token")
+const errorBox=document.getElementById("errorBox")
+const resultCard=document.getElementById("resultCard")
+const btn=document.querySelector("button[onclick='checkIMEI()']")
 
-const res=await fetch("/api/check?imei="+imei+"&service="+service,{
-headers:{authorization:token}
+errorBox.style.display="none"
+resultCard.style.display="none"
+
+if(!imei){
+errorBox.innerText="Please enter an IMEI number"
+errorBox.style.display="block"
+return
+}
+
+if(!/^\d{15}$/.test(imei)){
+errorBox.innerText="Invalid IMEI format. Must be exactly 15 digits."
+errorBox.style.display="block"
+return
+}
+
+if(btn){btn.disabled=true;btn.innerText="Checking..."}
+
+try{
+
+const res=await fetch("/api/check",{
+method:"POST",
+headers:{"Content-Type":"application/json","authorization":token||""},
+body:JSON.stringify({imei})
 })
 
 const data=await res.json()
 
-document.getElementById("result").innerText=data.result
+if(!res.ok){
+errorBox.innerText=data.error||"Check failed"
+errorBox.style.display="block"
+return
+}
+
+function deepFind(obj,key){
+if(typeof obj!=="object"||obj===null) return undefined
+if(key in obj) return obj[key]
+for(const k of Object.keys(obj)){const f=deepFind(obj[k],key);if(f!==undefined) return f}
+return undefined
+}
+function extract(d,keys){
+for(const k of keys){const v=deepFind(d,k);if(v!==undefined&&v!==null&&v!=="") return String(v)}
+return null
+}
+function escapeHtml(str){
+return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")
+}
+function badge(value,type){
+if(!value||value==="N/A"||value==="Unknown") return '<span class="badge badge-gray">Unknown</span>'
+const safe=escapeHtml(value)
+if(type==="status"){const v=value.toLowerCase();if(v.includes("clean")||v.includes("valid")||v.includes("active")) return '<span class="badge badge-green">'+safe+'</span>';if(v.includes("blacklist")||v.includes("blocked")||v.includes("lost")||v.includes("stolen")) return '<span class="badge badge-red">'+safe+'</span>';return '<span class="badge badge-yellow">'+safe+'</span>'}
+if(type==="blacklist"){const v=value.toLowerCase();if(v==="clean"||v==="no"||v==="false"||v==="not blacklisted") return '<span class="badge badge-green">Clean</span>';if(v==="yes"||v==="true"||v==="blacklisted") return '<span class="badge badge-red">Blacklisted</span>';return '<span class="badge badge-yellow">'+safe+'</span>'}
+return safe
+}
+function setText(id,text){document.getElementById(id).textContent=text||"N/A"}
+
+document.getElementById("f-status").innerHTML=badge(extract(data,["status","imeiStatus","imei_status","validity","result"]),"status")
+document.getElementById("f-blacklist").innerHTML=badge(extract(data,["blacklist","blacklistStatus","blacklist_status","stolen","lost","gsmaStatus","gsma_status"]),"blacklist")
+setText("f-model",extract(data,["model","deviceModel","device_model","modelName","model_name","name"]))
+setText("f-brand",extract(data,["brand","manufacturer","brandName","brand_name","make"]))
+setText("f-carrier",extract(data,["carrier","network","operator","carrierName","carrier_name","networkName"]))
+setText("f-country",extract(data,["country","countryName","country_name","purchaseCountry","purchase_country"]))
+
+resultCard.style.display="block"
+
+}catch(err){
+
+errorBox.innerText="Network error: "+err.message
+errorBox.style.display="block"
+
+}finally{
+
+if(btn){btn.disabled=false;btn.innerText="Check IMEI"}
+
+}
 
 loadHistory()
 loadCredits()

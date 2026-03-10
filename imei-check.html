@@ -11,51 +11,177 @@
 
 body{
 font-family:Arial;
-background:#f4f6fb;
+background:#111827;
 margin:0;
+color:#f9fafb;
 }
 
 header{
-background:#111827;
+background:#0f172a;
 color:white;
 padding:20px;
 font-size:22px;
+border-bottom:1px solid #1e293b;
 }
 
 .container{
 max-width:700px;
 margin:auto;
 margin-top:40px;
-background:white;
+padding:0 16px 40px;
+}
+
+.search-box{
+background:#1e293b;
 padding:30px;
 border-radius:10px;
-box-shadow:0 10px 20px rgba(0,0,0,0.1);
+box-shadow:0 10px 20px rgba(0,0,0,0.3);
 }
 
 input{
 width:100%;
-padding:12px;
-border:1px solid #ccc;
+padding:14px;
+border:1px solid #334155;
 border-radius:6px;
 margin-top:10px;
+background:#0f172a;
+color:#f9fafb;
+font-size:16px;
+box-sizing:border-box;
+}
+
+input::placeholder{
+color:#64748b;
 }
 
 button{
-margin-top:10px;
-padding:12px;
+margin-top:12px;
+padding:14px;
 background:#2563eb;
 color:white;
 border:none;
 border-radius:6px;
 cursor:pointer;
+font-size:16px;
+width:100%;
 }
 
-.result{
-margin-top:20px;
-background:#f1f5f9;
-padding:15px;
+button:hover{
+background:#1d4ed8;
+}
+
+button:disabled{
+background:#475569;
+cursor:not-allowed;
+}
+
+.error{
+margin-top:16px;
+background:#450a0a;
+border:1px solid #7f1d1d;
+color:#fca5a5;
+padding:14px;
+border-radius:6px;
+}
+
+.card{
+margin-top:24px;
+background:#1e293b;
+border-radius:10px;
+overflow:hidden;
+box-shadow:0 10px 20px rgba(0,0,0,0.3);
+display:none;
+}
+
+.card-header{
+background:#0f172a;
+padding:16px 20px;
+font-size:18px;
+font-weight:bold;
+border-bottom:1px solid #334155;
+}
+
+.card-body{
+padding:20px;
+}
+
+.field{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:12px 0;
+border-bottom:1px solid #334155;
+}
+
+.field:last-child{
+border-bottom:none;
+}
+
+.field-label{
+color:#94a3b8;
+font-size:14px;
+}
+
+.field-value{
+font-weight:bold;
+color:#f1f5f9;
+text-align:right;
+max-width:60%;
+word-break:break-word;
+}
+
+.badge{
+display:inline-block;
+padding:4px 10px;
+border-radius:20px;
+font-size:13px;
+font-weight:bold;
+}
+
+.badge-green{
+background:#14532d;
+color:#86efac;
+}
+
+.badge-red{
+background:#450a0a;
+color:#fca5a5;
+}
+
+.badge-yellow{
+background:#422006;
+color:#fcd34d;
+}
+
+.badge-gray{
+background:#1e293b;
+color:#94a3b8;
+border:1px solid #334155;
+}
+
+.raw-toggle{
+margin-top:12px;
+text-align:center;
+}
+
+.raw-toggle a{
+color:#60a5fa;
+cursor:pointer;
+font-size:13px;
+text-decoration:underline;
+}
+
+.raw-output{
+margin-top:12px;
+background:#0f172a;
+padding:14px;
 border-radius:6px;
 white-space:pre-wrap;
+font-size:12px;
+color:#94a3b8;
+display:none;
+overflow:auto;
+max-height:300px;
 }
 
 </style>
@@ -70,55 +196,207 @@ IMEI Check Tool
 
 <div class="container">
 
-<h2>Enter IMEI</h2>
+<div class="search-box">
 
-<input id="imei" placeholder="Enter IMEI or Serial">
+<h2 style="margin-top:0">Enter IMEI Number</h2>
 
-<button onclick="checkIMEI()">Check IMEI</button>
+<input id="imei" placeholder="Enter 15-digit IMEI" maxlength="15">
 
-<div id="result" class="result"></div>
+<button id="checkBtn" onclick="checkIMEI()">Check IMEI</button>
+
+</div>
+
+<div id="errorBox" class="error" style="display:none"></div>
+
+<div id="resultCard" class="card">
+
+<div class="card-header">&#128247; Device Information</div>
+
+<div class="card-body">
+
+<div class="field">
+<span class="field-label">Device Model</span>
+<span class="field-value" id="f-model">—</span>
+</div>
+
+<div class="field">
+<span class="field-label">Brand</span>
+<span class="field-value" id="f-brand">—</span>
+</div>
+
+<div class="field">
+<span class="field-label">IMEI Status</span>
+<span class="field-value" id="f-status">—</span>
+</div>
+
+<div class="field">
+<span class="field-label">Blacklist Status</span>
+<span class="field-value" id="f-blacklist">—</span>
+</div>
+
+<div class="field">
+<span class="field-label">Carrier</span>
+<span class="field-value" id="f-carrier">—</span>
+</div>
+
+<div class="field">
+<span class="field-label">Country</span>
+<span class="field-value" id="f-country">—</span>
+</div>
+
+</div>
+
+<div class="raw-toggle">
+<a onclick="toggleRaw()">Show raw response</a>
+</div>
+
+<pre id="rawOutput" class="raw-output"></pre>
+
+</div>
 
 </div>
 
 <script>
 
+function escapeHtml(str){
+return String(str)
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#39;")
+}
+
+function badge(value, type){
+if(!value || value==="N/A" || value==="Unknown") return '<span class="badge badge-gray">Unknown</span>'
+const safe=escapeHtml(value)
+if(type==="status"){
+const v=String(value).toLowerCase()
+if(v.includes("clean")||v.includes("valid")||v.includes("active")) return '<span class="badge badge-green">'+safe+'</span>'
+if(v.includes("blacklist")||v.includes("blocked")||v.includes("lost")||v.includes("stolen")) return '<span class="badge badge-red">'+safe+'</span>'
+return '<span class="badge badge-yellow">'+safe+'</span>'
+}
+if(type==="blacklist"){
+const v=String(value).toLowerCase()
+if(v==="clean"||v==="no"||v==="false"||v==="not blacklisted") return '<span class="badge badge-green">Clean</span>'
+if(v==="yes"||v==="true"||v==="blacklisted") return '<span class="badge badge-red">Blacklisted</span>'
+return '<span class="badge badge-yellow">'+safe+'</span>'
+}
+return safe
+}
+
+function extract(data, keys){
+for(const k of keys){
+// deep search for key
+const found = deepFind(data, k)
+if(found!==undefined&&found!==null&&found!=="") return String(found)
+}
+return null
+}
+
+function deepFind(obj, key){
+if(typeof obj !== "object" || obj===null) return undefined
+if(key in obj) return obj[key]
+for(const k of Object.keys(obj)){
+const found = deepFind(obj[k], key)
+if(found!==undefined) return found
+}
+return undefined
+}
+
+function val(text){
+return text||"N/A"
+}
+
+// Set a plain-text field safely
+function setText(id, text){
+document.getElementById(id).textContent=val(text)
+}
+
 async function checkIMEI(){
 
-const imei = document.getElementById("imei").value
+const imei=document.getElementById("imei").value.trim()
+const errorBox=document.getElementById("errorBox")
+const resultCard=document.getElementById("resultCard")
+const btn=document.getElementById("checkBtn")
+
+errorBox.style.display="none"
+resultCard.style.display="none"
 
 if(!imei){
-document.getElementById("result").innerText="Please enter an IMEI"
+errorBox.innerText="Please enter an IMEI number"
+errorBox.style.display="block"
 return
 }
 
-document.getElementById("result").innerText="Checking..."
+if(!/^\d{15}$/.test(imei)){
+errorBox.innerText="Invalid IMEI format. Must be exactly 15 digits."
+errorBox.style.display="block"
+return
+}
+
+btn.disabled=true
+btn.innerText="Checking..."
 
 try{
 
-const res = await fetch("/api/api-check?imei="+imei)
+const res=await fetch("/api/check",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({imei})
+})
 
-const data = await res.json()
+const data=await res.json()
 
-if(data.status==="success"){
-
-document.getElementById("result").innerText =
-data.result
-
-}else{
-
-document.getElementById("result").innerText =
-"Check failed"
-
+if(!res.ok){
+errorBox.innerText=data.error||(data.details)||"Check failed"
+errorBox.style.display="block"
+return
 }
+
+// Populate fields using flexible key search
+const model=extract(data,["model","deviceModel","device_model","modelName","model_name","name"])
+const brand=extract(data,["brand","manufacturer","brandName","brand_name","make"])
+const status=extract(data,["status","imeiStatus","imei_status","validity","result"])
+const blacklist=extract(data,["blacklist","blacklistStatus","blacklist_status","stolen","lost","gsmaStatus","gsma_status"])
+const carrier=extract(data,["carrier","network","operator","carrierName","carrier_name","networkName"])
+const country=extract(data,["country","countryName","country_name","purchaseCountry","purchase_country"])
+
+setText("f-model", model)
+setText("f-brand", brand)
+document.getElementById("f-status").innerHTML=badge(status,"status")
+document.getElementById("f-blacklist").innerHTML=badge(blacklist,"blacklist")
+setText("f-carrier", carrier)
+setText("f-country", country)
+
+document.getElementById("rawOutput").innerText=JSON.stringify(data,null,2)
+document.getElementById("rawOutput").style.display="none"
+
+resultCard.style.display="block"
 
 }catch(err){
 
-document.getElementById("result").innerText =
-"Server error"
+errorBox.innerText="Network error: "+err.message
+errorBox.style.display="block"
+
+}finally{
+
+btn.disabled=false
+btn.innerText="Check IMEI"
 
 }
 
 }
+
+function toggleRaw(){
+const raw=document.getElementById("rawOutput")
+raw.style.display=raw.style.display==="none"?"block":"none"
+}
+
+// Allow Enter key to trigger check
+document.getElementById("imei").addEventListener("keydown",function(e){
+if(e.key==="Enter") checkIMEI()
+})
 
 </script>
 
